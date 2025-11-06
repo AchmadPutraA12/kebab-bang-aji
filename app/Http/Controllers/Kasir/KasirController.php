@@ -74,9 +74,10 @@ class KasirController extends Controller
         }
 
         $trx = null;
+        $printUrl = null;
 
         try {
-            DB::transaction(function () use ($cart, $subtotal, $tax, $total, $payment, $change, &$trx) {
+            DB::transaction(function () use ($cart, $subtotal, $tax, $total, $payment, $change, &$trx, &$printUrl) {
                 $user = Auth::user();
                 $now  = now();
 
@@ -113,7 +114,7 @@ class KasirController extends Controller
                         ->decrement('stock', $item['qty']);
                 }
 
-                ReceiptPrinter::print(
+                $printUrl = ReceiptPrinter::print(
                     $invoice_number,
                     $cart,
                     $subtotal,
@@ -130,6 +131,7 @@ class KasirController extends Controller
                 'success' => true,
                 'message' => 'Transaksi berhasil!',
                 'invoice_number' => $trx?->invoice_number,
+                'print_url' => $printUrl,
             ]);
         } catch (\Exception $e) {
             return response()->json([

@@ -11,6 +11,9 @@
         <div class="main-content">
             <div class="container-fluid" style="padding-top:26px;">
                 <div class="d-flex justify-content-between flex-row flex-wrap">
+                    {{-- ========================= --}}
+                    {{-- BAGIAN PRODUK --}}
+                    {{-- ========================= --}}
                     <div style="flex: 1 1 60%; min-width: 340px; max-width: 860px;">
                         <div class="search-row">
                             <div class="search-box-container">
@@ -44,7 +47,8 @@
                                     <div class="product-info">
                                         <div class="product-title">{{ $product->name }}</div>
                                         <div class="product-cat">{{ $product->categoryProduct->name ?? '-' }}</div>
-                                        <div class="product-price">Rp {{ number_format($product->price, 0, ',', '.') }}
+                                        <div class="product-price">
+                                            Rp {{ number_format($product->price, 0, ',', '.') }}
                                         </div>
                                         <div class="product-stock-row">
                                             <span class="product-stock">Stok:
@@ -81,6 +85,7 @@
                                     <div id="cart-total">Rp 0</div>
                                 </div>
                             </div>
+
                             <div class="cart-form-label" style="margin-top:10px;">Pembayaran</div>
                             <input type="text" class="cart-input" id="payment" placeholder="Nominal bayar">
                             <div class="cart-form-label" style="margin-top:8px;">Kembalian</div>
@@ -103,12 +108,10 @@
             let sisa = split[0].length % 3;
             let rupiah = split[0].substr(0, sisa);
             let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
             if (ribuan) {
                 let separator = sisa ? '.' : '';
                 rupiah += separator + ribuan.join('.');
             }
-
             rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
             return rupiah ? 'Rp ' + rupiah : '';
         }
@@ -117,11 +120,10 @@
             return parseInt(rupiahString.replace(/[^0-9]/g, '')) || 0;
         }
 
-
         window.addEventListener('DOMContentLoaded', function() {
             let cart = {};
 
-            // Search product
+            // ================= SEARCH DAN FILTER =================
             document.getElementById('searchProduct').addEventListener('input', function(e) {
                 let search = this.value.trim().toLowerCase();
                 document.querySelectorAll('.product-card').forEach(function(card) {
@@ -133,7 +135,6 @@
                 });
             });
 
-            // Category filter
             document.querySelectorAll('.category-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.category-btn').forEach(b => b.classList.remove(
@@ -141,7 +142,7 @@
                     this.classList.add('active');
                     let cat = this.dataset.category;
                     let search = document.getElementById('searchProduct').value.trim()
-                        .toLowerCase();
+                .toLowerCase();
                     document.querySelectorAll('.product-card').forEach(function(card) {
                         let matchCat = (cat === 'all' || card.dataset.category == cat);
                         let matchSearch = card.dataset.name.includes(search);
@@ -150,6 +151,7 @@
                 });
             });
 
+            // ================= RENDER CART =================
             function renderCartItems() {
                 let html = '';
                 let isEmpty = Object.keys(cart).length === 0;
@@ -164,24 +166,22 @@
                     $summary.style.display = "block";
                     Object.values(cart).forEach(item => {
                         html += `
-                <div class="cart-item-row">
-                    <div class="cart-item-img-wrap">
-                        <img src="${item.image}" class="cart-item-img" alt="${item.name}">
-                        <button class="cart-remove-btn" onclick="window.removeCart('${item.id}')">
-                            &times;
-                        </button>
-                    </div>
-                    <div class="cart-item-main">
-                        <div class="cart-item-title">${item.name}</div>
-                        <div class="cart-item-price">Rp ${item.price.toLocaleString('id-ID')}</div>
-                    </div>
-                    <div class="cart-qty-control">
-                        <button onclick="window.updateQty('${item.id}',-1)">-</button>
-                        <span class="mx-2" style="font-size:1.08rem;width:25px;display:inline-block;text-align:center">${item.qty}</span>
-                        <button onclick="window.updateQty('${item.id}',1)">+</button>
-                    </div>
-                </div>
-                `;
+                        <div class="cart-item-row">
+                            <div class="cart-item-img-wrap">
+                                <img src="${item.image}" class="cart-item-img" alt="${item.name}">
+                                <button class="cart-remove-btn" onclick="window.removeCart('${item.id}')">&times;</button>
+                            </div>
+                            <div class="cart-item-main">
+                                <div class="cart-item-title">${item.name}</div>
+                                <div class="cart-item-price">Rp ${item.price.toLocaleString('id-ID')}</div>
+                            </div>
+                            <div class="cart-qty-control">
+                                <button onclick="window.updateQty('${item.id}',-1)">-</button>
+                                <span class="mx-2" style="font-size:1.08rem;width:25px;display:inline-block;text-align:center">${item.qty}</span>
+                                <button onclick="window.updateQty('${item.id}',1)">+</button>
+                            </div>
+                        </div>
+                        `;
                     });
                 }
                 document.getElementById('cart-items').innerHTML = html;
@@ -207,32 +207,25 @@
                     total
                 } = renderSummary();
                 let pay = parseRupiah(document.getElementById('payment').value);
-
                 let change = pay - total;
-                document.getElementById('change').value = (change >= 0) ? 'Rp ' + change.toLocaleString('id-ID') :
+                document.getElementById('change').value = (change >= 0) ?
+                    'Rp ' + change.toLocaleString('id-ID') :
                     'Pembayaran kurang';
             }
 
+            // ================= INPUT PEMBAYARAN =================
             const paymentInput = document.getElementById('payment');
-
             paymentInput.addEventListener('input', function(e) {
                 const cursorPosition = this.selectionStart;
                 const originalLength = this.value.length;
-
-                // Format ulang jadi Rupiah
                 this.value = formatRupiah(this.value);
-
-                // Update kembalian
                 updateChange();
-
-                // Kembalikan posisi kursor
                 const newLength = this.value.length;
                 this.setSelectionRange(cursorPosition + (newLength - originalLength), cursorPosition + (
                     newLength - originalLength));
             });
 
-
-            // Add to cart
+            // ================= TAMBAH KERANJANG =================
             document.querySelectorAll('.add-to-cart').forEach(btn => {
                 btn.addEventListener('click', function() {
                     let id = this.dataset.id;
@@ -257,7 +250,7 @@
                 });
             });
 
-            // Clear All
+            // ================= HAPUS KERANJANG =================
             document.querySelector('.cart-clear-btn').addEventListener('click', function() {
                 cart = {};
                 renderCartItems();
@@ -265,16 +258,18 @@
                 updateChange();
             });
 
-            // Checkout AJAX
+            // ================= CHECKOUT AJAX =================
             document.getElementById('checkout-btn').addEventListener('click', function() {
                 let {
                     total
                 } = renderSummary();
                 let payment = parseRupiah(document.getElementById('payment').value);
 
-                if (Object.keys(cart).length === 0) return Swal.fire('Keranjang masih kosong!', '',
-                    'warning');
-                if (payment < total) return Swal.fire('Pembayaran kurang!', '', 'warning');
+                if (Object.keys(cart).length === 0)
+                    return Swal.fire('Keranjang masih kosong!', '', 'warning');
+                if (payment < total)
+                    return Swal.fire('Pembayaran kurang!', '', 'warning');
+
                 fetch('{{ route('kasir.checkout') }}', {
                         method: 'POST',
                         headers: {
@@ -293,9 +288,13 @@
                                 icon: 'success',
                                 title: 'Berhasil!',
                                 text: data.message || 'Transaksi berhasil!',
-                                timer: 1800,
+                                timer: 1200,
                                 showConfirmButton: false
                             }).then(() => {
+                                // ✅ CETAK STRUK DI TAB BARU
+                                if (data.print_url) {
+                                    window.open(data.print_url, '_blank');
+                                }
                                 location.reload();
                             });
                         } else {
@@ -317,20 +316,20 @@
                     });
             });
 
+            // ================= EVENT LAIN =================
             window.updateQty = function(id, delta) {
                 if (cart[id]) {
                     let maxStock = cart[id].stock;
                     let next = cart[id].qty + delta;
-                    if (next <= 0) {
-                        delete cart[id];
-                    } else if (next <= maxStock) {
-                        cart[id].qty = next;
-                    } else Swal.fire('Stok tidak cukup!', '', 'warning');
+                    if (next <= 0) delete cart[id];
+                    else if (next <= maxStock) cart[id].qty = next;
+                    else Swal.fire('Stok tidak cukup!', '', 'warning');
                     renderCartItems();
                     renderSummary();
                     updateChange();
                 }
             }
+
             window.removeCart = function(id) {
                 delete cart[id];
                 renderCartItems();
@@ -338,6 +337,7 @@
                 updateChange();
             }
 
+            // Render awal
             renderCartItems();
             renderSummary();
             updateChange();

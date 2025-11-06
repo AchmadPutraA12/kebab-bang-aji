@@ -14,7 +14,7 @@ use App\Http\Controllers\Kasir\KasirController;
 use App\Http\Controllers\Kasir\StockKasirController;
 use App\Http\Middleware\CategoryMiddleware;
 use Mike42\Escpos\Printer;
-use Mike42\Escpos\PrintConnectors\RawPrintConnector;
+use Mike42\Escpos\PrintConnectors\FilePrintConnector;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -107,7 +107,7 @@ Route::middleware([CategoryMiddleware::class . ':2'])->group(function () {
 
 Route::get('/test-printer', function () {
     try {
-        $connector = new RawPrintConnector("smb://newgabungan/POS-58");
+        $connector = new FilePrintConnector("/var/spool/samba/print-job-" . time() . ".txt");
         $printer = new Printer($connector);
 
         $printer->text("Tes Cetak dari Server Laravel\n");

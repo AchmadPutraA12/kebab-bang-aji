@@ -14,8 +14,8 @@ use App\Http\Controllers\Kasir\KasirController;
 use App\Http\Controllers\Kasir\StockKasirController;
 use App\Http\Middleware\CategoryMiddleware;
 use Mike42\Escpos\Printer;
+use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 use Mike42\Escpos\PrintConnectors\FilePrintConnector;
-
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -107,15 +107,26 @@ Route::middleware([CategoryMiddleware::class . ':2'])->group(function () {
 
 Route::get('/test-printer', function () {
     try {
-        $connector = new FilePrintConnector("/var/spool/samba/print-job-" . time() . ".txt");
+        // Deteksi sistem operasi
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            // Jalankan di Windows (kasir lokal)
+            $connector = new WindowsPrintConnector("POS-58");
+        } else {
+            // Jalankan di Linux (server) -> fallback ke file spool
+            $spoolPath = "/var/spool/samba/print-job-" . time() . ".txt";
+            $connector = new FilePrintConnector($spoolPath);
+        }
+
+        // Buat instance printer
         $printer = new Printer($connector);
 
-        $printer->text("Tes Cetak dari Server Laravel\n");
+        // Isi struk tes
+        $printer->text("Tes Cetak Sukses!\n");
         $printer->text("Waktu: " . now()->format('d-m-Y H:i:s') . "\n");
         $printer->cut();
         $printer->close();
 
-        return '✅ Printer berhasil mencetak dari Laravel.';
+        return '✅ Printer berhasil mencetak (atau membuat file spool di Linux).';
     } catch (\Exception $e) {
         return '❌ Gagal mencetak: ' . $e->getMessage();
     }

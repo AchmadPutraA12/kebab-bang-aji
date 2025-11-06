@@ -12,33 +12,58 @@ class ReceiptPrinter
         $branchAddress = $user->branch?->address ?? 'Alamat tidak tersedia';
         $nameUser = $user->name ?? 'nama tidak tersedia';
 
+        // Bungkus teks panjang agar turun baris (maks 32 kolom untuk 58mm)
+        $wrap = fn($text, $width = 32) => implode("\n", str_split($text, $width));
+
+        // Fungsi bantu untuk format kiri-kanan
+        $pad = function ($left, $right, $width = 32) {
+            $spaces = max(1, $width - strlen(strip_tags($left)) - strlen(strip_tags($right)));
+            return $left . str_repeat(' ', $spaces) . $right;
+        };
+
+        // ✅ HTML & CSS struk
         $html = '
         <html>
         <head>
             <title>Struk ' . $invoice_number . '</title>
             <style>
+                /* Pastikan margin nol saat print */
                 @page {
-                    size: 58mm auto; /* ubah ke 80mm jika printer kamu 80mm */
+                    size: 58mm auto;
                     margin: 0;
                 }
+
                 body {
                     font-family: monospace;
                     font-size: 11px;
                     width: 58mm;
-                    margin: 0 auto;
-                    padding: 4px;
+                    margin: 0;
+                    padding: 0;
                     color: #000;
+                    white-space: pre;
+                    text-align: left;
                 }
-                .center { text-align: center; }
-                .line { border-top: 1px dashed #000; margin: 6px 0; }
-                .right { text-align: right; display: block; width: 100%; }
-                .item { display: flex; justify-content: space-between; font-size: 11px; }
-                .footer { margin-top: 10px; text-align: center; font-size: 11px; }
 
-                /* Tombol untuk tampilan layar */
+                .center {
+                    text-align: center;
+                    width: 100%;
+                    display: block;
+                }
+
+                .line {
+                    border-top: 1px dashed #000;
+                    margin: 6px 0;
+                }
+
+                .footer {
+                    margin-top: 10px;
+                    text-align: center;
+                    font-size: 11px;
+                }
+
                 .actions {
                     text-align: center;
-                    margin-top: 12px;
+                    margin-top: 10px;
                 }
 
                 button {
@@ -57,7 +82,7 @@ class ReceiptPrinter
                     background-color: #333;
                 }
 
-                /* ✅ Sembunyikan tombol saat dicetak */
+                /* ✅ Tombol tidak ikut tercetak */
                 @media print {
                     .actions { display: none !important; }
                 }
@@ -66,51 +91,48 @@ class ReceiptPrinter
         <body onload="window.print();">
             <div class="center">
                 <strong>KEBAB BANG AJI</strong><br>
-                ' . $branchAddress . '<br>
-                Operator: ' . $nameUser . '<br>
+                ' . nl2br($wrap($branchAddress)) . '<br>
+                Operator: ' . htmlspecialchars($nameUser) . '<br>
                 <small>Telp: 0812-3456-7890</small><br>
             </div>
 
-            <div class="line"></div>
-            <div>No. Invoice: ' . $invoice_number . '</div>
-            <div>Tanggal: ' . $createdAt->format('d-m-Y H:i:s') . '</div>
-            <div class="line"></div>';
+            ' . str_repeat('-', 32) . "\n" . '
+            No. Invoice: ' . $invoice_number . "\n" .
+            'Tanggal: ' . $createdAt->format('d-m-Y H:i:s') . "\n" .
+            str_repeat('-', 32) . "\n";
 
+        // ✅ Daftar Item
         foreach ($cart as $item) {
             $subtotalItem = $item['price'] * $item['qty'];
-            $html .= '
-                <div class="item">
-                    <span>' . htmlspecialchars($item['name']) . ' (' . $item['qty'] . 'x)</span>
-                    <span>Rp' . number_format($subtotalItem, 0, ',', '.') . '</span>
-                </div>';
+            $nameLine = htmlspecialchars($item['name']) . ' (' . $item['qty'] . 'x)';
+            $html .= $pad($nameLine, 'Rp' . number_format($subtotalItem, 0, ',', '.')) . "\n";
         }
 
-        $html .= '
-            <div class="line"></div>
-            <div class="item"><span>Subtotal</span><span>Rp ' . number_format($subtotal, 0, ',', '.') . '</span></div>
-            <div class="item"><span>PPN (10%)</span><span>Rp ' . number_format($tax, 0, ',', '.') . '</span></div>
-            <div class="item"><strong>Total</strong><strong>Rp ' . number_format($total, 0, ',', '.') . '</strong></div>
-            <div class="item"><span>Bayar</span><span>Rp ' . number_format($payment, 0, ',', '.') . '</span></div>
-            <div class="item"><span>Kembali</span><span>Rp ' . number_format($change, 0, ',', '.') . '</span></div>
-
-            <div class="line"></div>
+        // ✅ Total, bayar, kembali
+        $html .= str_repeat('-', 32) . "\n" .
+            $pad('Subtotal', 'Rp ' . number_format($subtotal, 0, ',', '.')) . "\n" .
+            $pad('PPN (10%)', 'Rp ' . number_format($tax, 0, ',', '.')) . "\n" .
+            $pad('Total', 'Rp ' . number_format($total, 0, ',', '.')) . "\n" .
+            $pad('Bayar', 'Rp ' . number_format($payment, 0, ',', '.')) . "\n" .
+            $pad('Kembali', 'Rp ' . number_format($change, 0, ',', '.')) . "\n" .
+            str_repeat('-', 32) . "\n" . '
             <div class="footer">
                 Terima kasih sudah berbelanja!<br>
-                Semoga hari Anda menyenangkan 😊
+                Semoga hari Anda menyenangkan :)
             </div>
 
-            <!-- ✅ Tombol hanya untuk tampilan layar -->
             <div class="actions">
                 <button onclick="window.print()">Cetak Ulang</button>
                 <button onclick="window.close()">Tutup</button>
             </div>
         </body>
-        </html>
-        ';
+        </html>';
 
+        // Simpan ke file public
         $filename = 'receipts/receipt_' . Str::uuid() . '.html';
         Storage::disk('public')->put($filename, $html);
 
+        // Return URL ke browser
         return asset('storage/' . $filename);
     }
 }

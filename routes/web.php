@@ -15,7 +15,7 @@ use App\Http\Controllers\Kasir\StockKasirController;
 use App\Http\Middleware\CategoryMiddleware;
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
-use Mike42\Escpos\PrintConnectors\FilePrintConnector;
+
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -105,29 +105,24 @@ Route::middleware([CategoryMiddleware::class . ':2'])->group(function () {
     });
 });
 
-Route::get('/test-printer', function () {
-    try {
-        // Deteksi sistem operasi
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            // Jalankan di Windows (kasir lokal)
-            $connector = new WindowsPrintConnector("POS-58");
-        } else {
-            // Jalankan di Linux (server) -> fallback ke file spool
-            $spoolPath = "/var/spool/samba/print-job-" . time() . ".txt";
-            $connector = new FilePrintConnector($spoolPath);
-        }
+// Route::get('/test-printer', function () {
+//     try {
+//         $connector = new WindowsPrintConnector("POS-58");
+//         $printer = new Printer($connector);
 
-        // Buat instance printer
-        $printer = new Printer($connector);
+//         $printer->text("Tes Cetak Sukses!\n");
+//         $printer->text("Waktu: " . now()->format('d-m-Y H:i:s') . "\n");
+//         $printer->cut();
+//         $printer->close();
 
-        // Isi struk tes
-        $printer->text("Tes Cetak Sukses!\n");
-        $printer->text("Waktu: " . now()->format('d-m-Y H:i:s') . "\n");
-        $printer->cut();
-        $printer->close();
+//         return '✅ Printer berhasil mencetak.';
+//     } catch (\Exception $e) {
+//         return '❌ Gagal mencetak: ' . $e->getMessage();
+//     }
+// });
 
-        return '✅ Printer berhasil mencetak (atau membuat file spool di Linux).';
-    } catch (\Exception $e) {
-        return '❌ Gagal mencetak: ' . $e->getMessage();
-    }
+Route::get('/test-print-client', function () {
+    // Server hanya mengirim halaman HTML sederhana
+    // yang akan otomatis memicu print di browser
+    return response()->view('test-print-client');
 });

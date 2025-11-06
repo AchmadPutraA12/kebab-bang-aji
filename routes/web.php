@@ -14,7 +14,7 @@ use App\Http\Controllers\Kasir\KasirController;
 use App\Http\Controllers\Kasir\StockKasirController;
 use App\Http\Middleware\CategoryMiddleware;
 use Mike42\Escpos\Printer;
-use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
+use Mike42\Escpos\PrintConnectors\RawPrintConnector;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -107,15 +107,15 @@ Route::middleware([CategoryMiddleware::class . ':2'])->group(function () {
 
 Route::get('/test-printer', function () {
     try {
-        $connector = new WindowsPrintConnector("POS-58");
+        $connector = new RawPrintConnector("smb://newgabungan/POS-58");
         $printer = new Printer($connector);
 
-        $printer->text("Tes Cetak Sukses!\n");
+        $printer->text("Tes Cetak dari Server Laravel\n");
         $printer->text("Waktu: " . now()->format('d-m-Y H:i:s') . "\n");
         $printer->cut();
         $printer->close();
 
-        return '✅ Printer berhasil mencetak.';
+        return '✅ Printer berhasil mencetak dari Laravel.';
     } catch (\Exception $e) {
         return '❌ Gagal mencetak: ' . $e->getMessage();
     }

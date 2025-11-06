@@ -17,14 +17,53 @@ class ReceiptPrinter
         <head>
             <title>Struk ' . $invoice_number . '</title>
             <style>
-                body { font-family: monospace; font-size: 12px; }
-                .center { text-align: center; }
-                .line { border-top: 1px dashed #000; margin: 6px 0; }
-                .right { text-align: right; }
+                @page {
+                    size: 58mm auto; /* ubah ke 80mm jika printer kamu 80mm */
+                    margin: 0;
+                }
+
+                body {
+                    font-family: monospace;
+                    font-size: 11px;
+                    width: 58mm;
+                    margin: 0 auto; /* ✅ posisi tengah */
+                    text-align: center; /* ✅ konten rata tengah */
+                    padding: 4px;
+                    color: #000;
+                }
+
+                .line {
+                    border-top: 1px dashed #000;
+                    margin: 6px 0;
+                }
+
+                .right {
+                    text-align: right;
+                    width: 100%;
+                    display: block;
+                }
+
+                .item {
+                    text-align: left;
+                    width: 100%;
+                    display: block;
+                }
+
+                .item-price {
+                    text-align: right;
+                    width: 100%;
+                    display: block;
+                }
+
+                .footer {
+                    margin-top: 10px;
+                    text-align: center;
+                }
             </style>
         </head>
-        <body onload="window.print();">
-            <div class="center">
+        <body onload="window.print(); window.close();">
+
+            <div>
                 <strong>KEBAB BANG AJI</strong><br>
                 ' . $branchAddress . '<br>
                 Operator: ' . $nameUser . '<br>
@@ -40,20 +79,24 @@ class ReceiptPrinter
         foreach ($cart as $item) {
             $subtotalItem = $item['price'] * $item['qty'];
             $html .= '
-                <div>' . htmlspecialchars($item['name']) . '</div>
-                <div class="right">' . $item['qty'] . ' x Rp' . number_format($item['price'], 0, ',', '.') .
+                <div class="item">' . htmlspecialchars($item['name']) . '</div>
+                <div class="item-price">' . $item['qty'] . ' x Rp' . number_format($item['price'], 0, ',', '.') .
                 ' = Rp' . number_format($subtotalItem, 0, ',', '.') . '</div>';
         }
 
         $html .= '
             <div class="line"></div>
-            <div>Subtotal: <span class="right">Rp ' . number_format($subtotal, 0, ',', '.') . '</span></div>
-            <div>PPN (10%): <span class="right">Rp ' . number_format($tax, 0, ',', '.') . '</span></div>
-            <div>Total: <span class="right">Rp ' . number_format($total, 0, ',', '.') . '</span></div>
-            <div>Bayar: <span class="right">Rp ' . number_format($payment, 0, ',', '.') . '</span></div>
-            <div>Kembali: <span class="right">Rp ' . number_format($change, 0, ',', '.') . '</span></div>
+            <div class="right">Subtotal: Rp ' . number_format($subtotal, 0, ',', '.') . '</div>
+            <div class="right">PPN (10%): Rp ' . number_format($tax, 0, ',', '.') . '</div>
+            <div class="right"><b>Total: Rp ' . number_format($total, 0, ',', '.') . '</b></div>
+            <div class="right">Bayar: Rp ' . number_format($payment, 0, ',', '.') . '</div>
+            <div class="right">Kembali: Rp ' . number_format($change, 0, ',', '.') . '</div>
             <div class="line"></div>
-            <div class="center">Terima kasih sudah berbelanja!</div>
+
+            <div class="footer">
+                <b>Terima kasih!</b><br>
+                Sudah berbelanja di Kebab Bang Aji<br>
+            </div>
         </body>
         </html>
         ';

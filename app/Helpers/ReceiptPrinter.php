@@ -21,49 +21,50 @@ class ReceiptPrinter
                     size: 58mm auto; /* ubah ke 80mm jika printer kamu 80mm */
                     margin: 0;
                 }
-
                 body {
                     font-family: monospace;
                     font-size: 11px;
                     width: 58mm;
-                    margin: 0 auto; /* ✅ posisi tengah */
-                    text-align: center; /* ✅ konten rata tengah */
+                    margin: 0 auto;
                     padding: 4px;
                     color: #000;
                 }
+                .center { text-align: center; }
+                .line { border-top: 1px dashed #000; margin: 6px 0; }
+                .right { text-align: right; display: block; width: 100%; }
+                .item { display: flex; justify-content: space-between; font-size: 11px; }
+                .footer { margin-top: 10px; text-align: center; font-size: 11px; }
 
-                .line {
-                    border-top: 1px dashed #000;
-                    margin: 6px 0;
-                }
-
-                .right {
-                    text-align: right;
-                    width: 100%;
-                    display: block;
-                }
-
-                .item {
-                    text-align: left;
-                    width: 100%;
-                    display: block;
-                }
-
-                .item-price {
-                    text-align: right;
-                    width: 100%;
-                    display: block;
-                }
-
-                .footer {
-                    margin-top: 10px;
+                /* Tombol untuk tampilan layar */
+                .actions {
                     text-align: center;
+                    margin-top: 12px;
+                }
+
+                button {
+                    display: inline-block;
+                    margin: 4px;
+                    padding: 6px 12px;
+                    font-size: 11px;
+                    background-color: #000;
+                    color: #fff;
+                    border: none;
+                    cursor: pointer;
+                    border-radius: 3px;
+                }
+
+                button:hover {
+                    background-color: #333;
+                }
+
+                /* ✅ Sembunyikan tombol saat dicetak */
+                @media print {
+                    .actions { display: none !important; }
                 }
             </style>
         </head>
-        <body onload="window.print(); window.close();">
-
-            <div>
+        <body onload="window.print();">
+            <div class="center">
                 <strong>KEBAB BANG AJI</strong><br>
                 ' . $branchAddress . '<br>
                 Operator: ' . $nameUser . '<br>
@@ -73,29 +74,35 @@ class ReceiptPrinter
             <div class="line"></div>
             <div>No. Invoice: ' . $invoice_number . '</div>
             <div>Tanggal: ' . $createdAt->format('d-m-Y H:i:s') . '</div>
-            <div class="line"></div>
-        ';
+            <div class="line"></div>';
 
         foreach ($cart as $item) {
             $subtotalItem = $item['price'] * $item['qty'];
             $html .= '
-                <div class="item">' . htmlspecialchars($item['name']) . '</div>
-                <div class="item-price">' . $item['qty'] . ' x Rp' . number_format($item['price'], 0, ',', '.') .
-                ' = Rp' . number_format($subtotalItem, 0, ',', '.') . '</div>';
+                <div class="item">
+                    <span>' . htmlspecialchars($item['name']) . ' (' . $item['qty'] . 'x)</span>
+                    <span>Rp' . number_format($subtotalItem, 0, ',', '.') . '</span>
+                </div>';
         }
 
         $html .= '
             <div class="line"></div>
-            <div class="right">Subtotal: Rp ' . number_format($subtotal, 0, ',', '.') . '</div>
-            <div class="right">PPN (10%): Rp ' . number_format($tax, 0, ',', '.') . '</div>
-            <div class="right"><b>Total: Rp ' . number_format($total, 0, ',', '.') . '</b></div>
-            <div class="right">Bayar: Rp ' . number_format($payment, 0, ',', '.') . '</div>
-            <div class="right">Kembali: Rp ' . number_format($change, 0, ',', '.') . '</div>
-            <div class="line"></div>
+            <div class="item"><span>Subtotal</span><span>Rp ' . number_format($subtotal, 0, ',', '.') . '</span></div>
+            <div class="item"><span>PPN (10%)</span><span>Rp ' . number_format($tax, 0, ',', '.') . '</span></div>
+            <div class="item"><strong>Total</strong><strong>Rp ' . number_format($total, 0, ',', '.') . '</strong></div>
+            <div class="item"><span>Bayar</span><span>Rp ' . number_format($payment, 0, ',', '.') . '</span></div>
+            <div class="item"><span>Kembali</span><span>Rp ' . number_format($change, 0, ',', '.') . '</span></div>
 
+            <div class="line"></div>
             <div class="footer">
-                <b>Terima kasih!</b><br>
-                Sudah berbelanja di Kebab Bang Aji<br>
+                Terima kasih sudah berbelanja!<br>
+                Semoga hari Anda menyenangkan 😊
+            </div>
+
+            <!-- ✅ Tombol hanya untuk tampilan layar -->
+            <div class="actions">
+                <button onclick="window.print()">Cetak Ulang</button>
+                <button onclick="window.close()">Tutup</button>
             </div>
         </body>
         </html>

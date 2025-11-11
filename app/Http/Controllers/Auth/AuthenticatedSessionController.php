@@ -58,6 +58,8 @@ class AuthenticatedSessionController extends Controller
                         return redirect()->back()->with('errors', 'Akun kasir belum memiliki cabang yang ditempati.');
                     }
                     return redirect()->intended(route('kasir.index'))->with('success', 'Login Berhasil');
+                case 3:
+                    return redirect()->intended(route('owner.index'))->with('success', 'Login Berhasil');
                 default:
                     Auth::logout();
                     return redirect()->back()->with('errors', 'Akun Anda tidak memiliki akses.');

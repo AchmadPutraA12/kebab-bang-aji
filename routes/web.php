@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Kasir\KasirController;
 use App\Http\Controllers\Kasir\StockKasirController;
+use App\Http\Controllers\Owner\DashboardController;
+use App\Http\Controllers\Owner\TransactionController as OwnerTransactionController;
 use App\Http\Middleware\CategoryMiddleware;
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
@@ -102,6 +104,18 @@ Route::middleware([CategoryMiddleware::class . ':2'])->group(function () {
     Route::prefix('stok-kasir')->name('stok-kasir.')->group(function () {
         Route::get('/', [StockKasirController::class, 'index'])->name('index');
         Route::post('/', [StockKasirController::class, 'store'])->name('store');
+    });
+});
+
+Route::middleware([CategoryMiddleware::class . ':3'])->group(function () {
+    Route::prefix('owner')->name('owner.')->group(function () {
+        Route::get('/', [DashboardController::class, 'index'])->name('index');
+        Route::get('/data', [DashboardController::class, 'ajaxData'])->name('dashboard.data');
+
+        Route::prefix('transaction')->name('transaction.')->group(function () {
+            Route::get('/', [OwnerTransactionController::class, 'index'])->name('index');
+            Route::get('/{id}', [OwnerTransactionController::class, 'show'])->name('show');
+        });
     });
 });
 

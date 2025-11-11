@@ -103,7 +103,7 @@
                     </a>
                 </li>
             </ul>
-        @else
+        @elseif (Auth::user()->category_id == 2)
             <ul class="metismenu" id="sidenav">
                 <li style="margin-bottom: 0.5rem;">
                     <a href="{{ route('stok-kasir.index') }}">
@@ -118,6 +118,25 @@
                         <div class="parent-icon"><i class="material-icons-outlined">shopping_cart</i>
                         </div>
                         <div class="menu-title">Cashier</div>
+                    </a>
+                </li>
+            </ul>
+        @elseif (Auth::user()->category_id == 3)
+            <ul class="metismenu" id="sidenav" style="padding: 0; margin: 0;">
+                <li style="margin-bottom: 0.5rem;">
+                    <a href="{{ route('owner.index') }}">
+                        <div class="parent-icon">
+                            <i class="material-icons-outlined">dashboard</i>
+                        </div>
+                        <div class="menu-title">Dashboard</div>
+                    </a>
+                </li>
+                <li style="margin-bottom: 0.5rem;">
+                    <a href="{{ route('owner.transaction.index') }}">
+                        <div class="parent-icon">
+                            <i class="material-icons-outlined">receipt_long</i>
+                        </div>
+                        <div class="menu-title">Transaksi</div>
                     </a>
                 </li>
             </ul>
